@@ -25,6 +25,7 @@
       <a href="#dramas" data-tab="dramas">Dramas</a>
       <a href="#kids" data-tab="kids">Kids</a>
       <a href="#movies" data-tab="movies">Movies</a>
+      <a href="#shorts" data-tab="shorts">Shorts</a>
       <a href="#world" data-tab="world">World</a>
       <a href="#mylist" data-tab="mylist">My List</a>
     </nav>
@@ -67,15 +68,13 @@
       </div>
       <div class="frame-wrap"><iframe id="playerFrame" title="Video player" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
       <div class="player-actions">
-        <div class="seg" id="playerSeg" hidden>
-          <button data-mode="full" class="on">Full episodes</button>
-          <button data-mode="shorts">Shorts</button>
-        </div>
-        <button class="pill" id="listBtn"></button>
-        <a class="pill ghost" id="openExternal" target="_blank" rel="noopener">Open on source</a>
+        <button class="pill sm grad" id="listBtn"></button>
+        <button class="pill sm ghost" id="chanBtn">Channel</button>
+        <a class="pill sm ghost" id="openExternal" target="_blank" rel="noopener">Open in YouTube</a>
       </div>
       <p class="player-note" id="playerNote"></p>
       <p class="player-desc" id="playerDesc"></p>
+      <section class="upnext" id="upNext" hidden><h4>Up next</h4><div class="uplist" id="upList"></div></section>
     </div>
   </div>
 
@@ -89,13 +88,13 @@
       <div class="field">
         <label for="tmdbKey"><b>World Cinema key</b> <small>(optional)</small></label>
         <input id="tmdbKey" type="text" placeholder="Paste your free TMDB API key" autocomplete="off" spellcheck="false">
-        <small>Adds world movies, K-drama and C-drama info, new releases and official trailers. Get a free key at themoviedb.org &rarr; Settings &rarr; API.</small>
+        <small>Adds world movie info, new releases and official trailers. Get a free key at themoviedb.org &rarr; Settings &rarr; API.</small>
       </div>
       <div class="sheet-actions">
         <button class="pill ghost" id="settingsCancel">Close</button>
         <button class="pill" id="settingsSave">Save</button>
       </div>
-      <p class="legal">AD Movie only plays content that is free and legal: official channel uploads on YouTube and public domain films from the Internet Archive. It hosts no videos itself.</p>
+      <p class="legal">AD Movie only plays content that is free and legal: the latest uploads of official channels on YouTube. It hosts no videos itself. New videos are added automatically every 2 hours.</p>
     </div>
   </div>
 
