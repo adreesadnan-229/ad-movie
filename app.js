@@ -4,7 +4,7 @@
   "use strict";
 
   const CATS = {
-    pk: "Pakistani dramas", cn: "Chinese dramas", kr: "Korean dramas", anime: "Anime",
+    pk: "Pakistani dramas", tr: "Turkish dramas in Urdu", web: "Web series", cn: "Chinese dramas", kr: "Korean dramas", anime: "Anime",
     kids: "Little kids", toons: "Cartoons", movies: "Free full movies"
   };
   const KID_CATS = ["kids", "toons"];
@@ -57,7 +57,7 @@
     if (s < 86400) { const h = Math.round(s / 3600); return h + (h === 1 ? " hour ago" : " hours ago"); }
     const d = Math.round(s / 86400);
     if (d < 30) return d === 1 ? "Yesterday" : d + " days ago";
-    return Math.round(d / 30) + " months ago";
+    const mo = Math.round(d / 30); return mo + (mo === 1 ? " month ago" : " months ago");
   }
   const isNew = (iso) => Date.now() - new Date(iso) < 36 * 3600 * 1000;
   function views(n) {
@@ -267,13 +267,15 @@
   function viewHome() {
     if (kids) return viewKids(true);
     return [
-      hero(["pk", "cn", "kr", "anime", "movies"]),
-      chips([["Pakistani", "#dramas"], ["Chinese", "#dramas"], ["Korean", "#dramas"], ["Anime", "#dramas"], ["Kids", "#kids"], ["Cartoons", "#kids"], ["Movies", "#movies"], ["Shorts", "#shorts"]]),
+      hero(["pk", "tr", "web", "cn", "kr", "anime", "movies"]),
+      chips([["Pakistani", "#dramas"], ["Turkish", "#dramas"], ["Web series", "#dramas"], ["Chinese", "#dramas"], ["Korean", "#dramas"], ["Anime", "#dramas"], ["Kids", "#kids"], ["Cartoons", "#kids"], ["Movies", "#movies"], ["Shorts", "#shorts"]]),
       recentRow(),
-      row("New today", { live: true, big: true }, latest(["pk", "cn", "kr", "anime", "movies"], 16, 2)),
-      row("Trending this week", { sub: "Most watched" }, trending(["pk", "cn", "kr", "anime", "movies", "toons"])),
+      row("New today", { live: true, big: true }, latest(["pk", "tr", "web", "cn", "kr", "anime", "movies"], 16, 2)),
+      row("Trending this week", { sub: "Most watched" }, trending(["pk", "tr", "web", "cn", "kr", "anime", "movies", "toons"])),
       row("Pakistani dramas", { link: "#dramas" }, latest(["pk"], 20, 6)),
       row("Shorts", { link: "#shorts" }, latest(["pk", "cn", "kr", "toons"], 16, 3, { shorts: true })),
+      row("Turkish dramas in Urdu", { link: "#dramas" }, latest(["tr"], 20, 15, { noPromo: true })),
+      row("Web series", { sub: "TVF, Girliyapa, Dice Media" }, latest(["web"], 20, 5)),
       row("Chinese dramas", { link: "#dramas" }, latest(["cn"], 20, 6)),
       row("Korean dramas", { link: "#dramas" }, latest(["kr"], 20, 6)),
       row("Anime", { sub: "Official · Muse Asia, Ani-One" }, latest(["anime"], 20, 10)),
@@ -289,9 +291,9 @@
     return [
       el("h1", { class: "page-title", text: "Dramas" }),
       el("p", { class: "page-sub", text: "The newest episodes from official channels, updated every 2 hours." }),
-      ...["pk", "cn", "kr", "anime"].flatMap(cat => [
+      ...["pk", "tr", "web", "cn", "kr", "anime"].flatMap(cat => [
         row(CATS[cat], { live: true }, latest([cat], 24, 8, { noPromo: true })),
-        chanRow(CATS[cat].replace(/s$/, "") + " channels", [cat])
+        chanRow("Channels", [cat])
       ]),
       row("Drama shorts", { link: "#shorts" }, latest(["pk", "cn", "kr"], 16, 3, { shorts: true })),
       tmdbKey ? row("Popular K-dramas", { sub: "Trailers" }, () => tmdb("discover/tv", { with_original_language: "ko", sort_by: "popularity.desc", with_genres: "18" }).then(d => tmdbItems(d.results, "tv"))) : null,
@@ -347,6 +349,7 @@
       row("Trending this week", {}, () => tmdb("trending/movie/week").then(d => tmdbItems(d.results, "movie"))),
       row("Coming soon", {}, () => tmdb("movie/upcoming").then(d => tmdbItems(d.results, "movie"))),
       row("Bollywood", {}, () => tmdb("discover/movie", { with_original_language: "hi", sort_by: "popularity.desc" }).then(d => tmdbItems(d.results, "movie"))),
+      row("Popular web series worldwide", { sub: "Netflix, Prime and more · trailers" }, () => tmdb("trending/tv/week").then(d => tmdbItems(d.results, "tv"))),
       row("K-dramas", {}, () => tmdb("discover/tv", { with_original_language: "ko", sort_by: "popularity.desc", with_genres: "18" }).then(d => tmdbItems(d.results, "tv"))),
       row("Anime", {}, () => tmdb("discover/tv", { with_original_language: "ja", with_genres: "16", sort_by: "popularity.desc" }).then(d => tmdbItems(d.results, "tv")))
     ];
