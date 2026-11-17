@@ -1,47 +1,8 @@
 // Builds data/feed.json from the public YouTube RSS feeds of official channels.
 // Runs in GitHub Actions every few hours, so the app always shows the newest uploads.
-import { writeFile, readFile } from "node:fs/promises";
+import { writeFile, readFile, readdir } from "node:fs/promises";
+import { CHANNELS } from "./channels.mjs";
 
-const CHANNELS = [
-  ["UC4JCksJF76g_MdzPVBJoC3Q", "ARY Digital", "pk", "Urdu"],
-  ["UCEeEQxm6qc_qaTE7qTV5aLQ", "HUM TV", "pk", "Urdu"],
-  ["UCe9JSDmyqNgA_l2BzGHq1Ug", "Har Pal Geo", "pk", "Urdu"],
-  ["UCF2ltLX1dnPa6-L1paPaMzw", "Green TV", "pk", "Urdu"],
-  ["UCUhpu5MJQ_bjPkXO00jyxsw", "iQIYI", "cn", "Chinese"],
-  ["UCI70JGG0hJS306Q-hGWfB7Q", "YOUKU English", "cn", "Chinese · EN subs"],
-  ["UCiu3bj4rR8KOYcUA4KNkOAA", "WeTV English", "cn", "Chinese · EN subs"],
-  ["UCQatgKoA7lylp_UzvsLCgcw", "Tencent Video", "cn", "Chinese"],
-  ["UC5BMQOsAB8hKUyHu9KI6yig", "KBS World TV", "kr", "Korean · EN subs"],
-  ["UCBAEVMr0li9YYF8IwZHfusw", "MBC Drama", "kr", "Korean"],
-  ["UCkbJc8jMcTXwhtmN5VMwfXg", "JTBC Drama", "kr", "Korean"],
-  ["UCNIiH_4ArJNd_cDZApZ7AFg", "TVING", "kr", "Korean"],
-  ["UCkY3P2CPygbStNCFXE_vpxw", "TRT Drama Urdu", "tr", "Turkish · Urdu dubbed"],
-  ["UCNJcSUSzUeFm8W9P7UUlSeQ", "TVF", "web", "Hindi web series"],
-  ["UCTlnaHHQ75zlDg_fLr7tGEg", "The Timeliners", "web", "Hindi web series"],
-  ["UCdxbhKxr8pyWTx1ExCSmJRw", "Girliyapa", "web", "Hindi web series"],
-  ["UCC89oVFqenaffhBoyqxd6qw", "Dice Media", "web", "Hindi web series"],
-  ["UCGbshtvS9t-8CW11W7TooQg", "Muse Asia", "anime", "Anime · official"],
-  ["UC0wNSTMWIL3qaorLx0jie6A", "Ani-One Asia", "anime", "Anime · official"],
-  ["UCAOtE1V7Ots4DjM8JLlrYgg", "Peppa Pig", "kids", "Little kids"],
-  ["UCVzLLZkDuFGAE2BGdBuBNBg", "Bluey", "kids", "Little kids"],
-  ["UCbCmjCuTUZos6Inko4u57UQ", "Cocomelon", "kids", "Rhymes"],
-  ["UCcdwLMPsaU2ezNSJU1nFoBQ", "Pinkfong", "kids", "Rhymes"],
-  ["UCSVSJ1OCSv5ClFgKFTHIDew", "PAW Patrol", "kids", "Little kids"],
-  ["UCY2jUnU118sVkdj2xafiJ0g", "PJ Masks", "kids", "Little kids"],
-  ["UCpYye8D5fFMUPf9nSfgd4bA", "BabyBus", "kids", "Learning"],
-  ["UCu59yAFE8fM0sVNTipR4edw", "Masha and the Bear", "kids", "Cartoon"],
-  ["UChULBXQf9VDYAi3vRLu_U-w", "Gecko's Garage", "kids", "Learning"],
-  ["UCKAqou7V9FAWXpZd9xtOg3Q", "Little Baby Bum", "kids", "Rhymes"],
-  ["UCgbfG5HoczHIkpzxLYH-8Ww", "Pokémon Kids TV", "toons", "Cartoon"],
-  ["UC9trsD1jCTXXtN3xIOIU8gg", "WB Kids", "toons", "Tom & Jerry, Looney Tunes"],
-  ["UCNEKMkg_DG8eAyR1BNWsSvw", "Oggy", "toons", "Cartoon"],
-  ["UCcKJJuOe2tOqgrKw0Gks-sw", "Zig & Sharko", "toons", "Cartoon"],
-  ["UCph-WGR0oCbJDpaWmNHb5zg", "Larva TUBA", "toons", "Cartoon"],
-  ["UCkAGrHCLFmlK3H2kd6isipg", "Mr Bean", "toons", "Comedy for all"],
-  ["UC8IHAQMuiJdY6ALuhG7iU8Q", "FilmRise Movies", "movies", "Free full movies · English"],
-  ["UCyoXW-Dse7fURq30EWl_CUA", "Goldmines", "movies", "Free full movies · Hindi"],
-  ["UCVFYikepF-avelvuIaQ_lHA", "Popcornflix", "movies", "Free full movies · English"]
-];
 
 const UA = { "User-Agent": "Mozilla/5.0 (feed builder)", "Accept-Language": "en" };
 const dec = (s) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
@@ -90,4 +51,16 @@ for (const [id, name, cat, lang] of CHANNELS) {
   out.push({ id, name, cat, lang, img, videos, shorts });
   console.log(`${name}: ${videos.length} videos, ${shorts.length} shorts`);
 }
+// Tag each video with the drama/series (playlist) it belongs to, so the app can open the full episode list.
+try {
+  const { shows } = JSON.parse(await readFile("data/shows.json", "utf8"));
+  const live = new Set(shows.map(s => s.id));
+  const owner = new Map();
+  for (const f of await readdir("data/shows")) {
+    const lists = JSON.parse(await readFile(`data/shows/${f}`, "utf8"));
+    for (const [pid, items] of Object.entries(lists)) if (live.has(pid)) for (const [vid] of items) if (!owner.has(vid)) owner.set(vid, pid);
+  }
+  for (const c of out) for (const v of c.videos) { const s = owner.get(v.id); if (s) v.s = s; else delete v.s; }
+} catch { /* shows not built yet */ }
+
 await writeFile("data/feed.json", JSON.stringify({ updated: new Date().toISOString(), channels: out }));

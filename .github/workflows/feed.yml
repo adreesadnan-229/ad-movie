@@ -1,7 +1,8 @@
 name: Update latest videos
 on:
   schedule:
-    - cron: "15 */2 * * *"
+    - cron: "15 */2 * * *"      # latest uploads, every 2 hours
+    - cron: "45 3,15 * * *"     # full episode lists and movies, twice a day
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,10 +14,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: node scripts/build-feed.mjs
+      - name: Build episode lists and movies (YouTube Data API)
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 3,15 * * *'
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+        run: node scripts/build-shows.mjs
+      - name: Build latest uploads (RSS)
+        run: node scripts/build-feed.mjs
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/feed.json
+          git add data
           git diff --staged --quiet || (git commit -m "Update latest videos" && git push)

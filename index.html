@@ -66,11 +66,23 @@
           <p id="playerSub"></p>
         </div>
       </div>
-      <div class="frame-wrap"><iframe id="playerFrame" title="Video player" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+      <div class="frame-wrap">
+        <iframe id="playerFrame" title="Video player" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <div class="next-overlay" id="nextOverlay" hidden>
+          <p id="nextOverlayText"></p>
+          <div><button class="pill sm grad" id="nextNow">Play now</button> <button class="pill sm ghost" id="nextCancel">Cancel</button></div>
+        </div>
+      </div>
+      <div class="ep-nav">
+        <button class="pill sm ghost" id="prevBtn" hidden>‹ Previous</button>
+        <button class="pill sm ghost" id="showBtn" hidden>All episodes</button>
+        <button class="pill sm grad" id="nextBtn" hidden>Next episode ›</button>
+      </div>
       <div class="player-actions">
-        <button class="pill sm grad" id="listBtn"></button>
+        <button class="pill sm ghost" id="listBtn"></button>
+        <button class="pill sm ghost" id="shareBtn">Share</button>
         <button class="pill sm ghost" id="chanBtn">Channel</button>
-        <a class="pill sm ghost" id="openExternal" target="_blank" rel="noopener">Open in YouTube</a>
+        <a class="pill sm ghost" id="openExternal" target="_blank" rel="noopener">YouTube</a>
       </div>
       <p class="player-note" id="playerNote"></p>
       <p class="player-desc" id="playerDesc"></p>
@@ -85,6 +97,11 @@
         <span><b>Kids mode</b><small>Shows only cartoons and kids channels</small></span>
         <input type="checkbox" id="kidsMode">
       </label>
+      <div class="field" id="pinRow" hidden>
+        <label for="pinInput"><b>Parent PIN</b></label>
+        <input id="pinInput" type="password" inputmode="numeric" maxlength="4" pattern="\d{4}" placeholder="4 digits" autocomplete="off">
+        <small id="pinHint"></small>
+      </div>
       <div class="field">
         <label for="tmdbKey"><b>World Cinema key</b> <small>(optional)</small></label>
         <input id="tmdbKey" type="text" placeholder="Paste your free TMDB API key" autocomplete="off" spellcheck="false">
