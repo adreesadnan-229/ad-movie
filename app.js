@@ -7,8 +7,10 @@
 
   const CATS = {
     pk: "Pakistani dramas", tr: "Turkish dramas in Urdu", web: "Web series", cn: "Chinese dramas", kr: "Korean dramas", anime: "Anime",
-    kids: "Little kids", toons: "Cartoons", movies: "Free full movies"
+    kids: "Little kids", toons: "Cartoons", movies: "Free full movies",
+    shows: "TV & game shows", cooking: "Cooking", vlogs: "Vlogs"
   };
+  const SHOW_CATS = ["shows", "cooking", "vlogs"];
   const DRAMA_CATS = ["pk", "tr", "web", "cn", "kr", "anime"];
   const KID_CATS = ["kids", "toons"];
 
@@ -380,6 +382,9 @@
       row("Trending this week", { sub: "Most watched" }, trending([...DRAMA_CATS, "movies", "toons"])),
       row("Turkish dramas in Urdu", { link: "#cat/tr" }, showsIn(["tr"], 20)),
       row("Free full movies", { link: "#movies" }, latest(["movies"], 20, 10)),
+      row("TV & game shows", { link: "#shows" }, latest(["shows"], 20, 2, { noPromo: true })),
+      row("Cooking", { link: "#cat/cooking" }, latest(["cooking"], 20, 3)),
+      row("Vlogs", { link: "#cat/vlogs" }, latest(["vlogs"], 20, 3)),
       row("Chinese dramas", { link: "#cat/cn" }, showsIn(["cn"], 20)),
       row("Korean dramas", { link: "#cat/kr" }, showsIn(["kr"], 20)),
       row("Web series", { link: "#cat/web" }, showsIn(["web"], 20)),
@@ -457,6 +462,22 @@
       row("New movies", { live: true, big: true }, latest(["movies"], 16, 8)),
       wrap,
       tmdbKey ? row("Coming soon to cinemas", { sub: "Trailers" }, () => tmdb("movie/upcoming").then(d => tmdbItems(d.results, "movie"))) : null
+    ];
+  }
+  function viewShowsTab() {
+    return [
+      ...pageHead("Shows", "Talk shows, game shows, cooking and vlogs from Pakistan, India and around the world."),
+      chips([["TV & game shows", "#cat/shows"], ["Cooking", "#cat/cooking"], ["Vlogs", "#cat/vlogs"]]),
+      row("New in TV & game shows", { live: true, big: true }, latest(["shows"], 20, 2, { noPromo: true })),
+      row("Show series", { link: "#cat/shows" }, showsIn(["shows"], 24)),
+      chanRow("Show channels", ["shows"]),
+      row("Cooking", { live: true, link: "#cat/cooking" }, latest(["cooking"], 20, 3)),
+      row("Cooking series", {}, showsIn(["cooking"], 20)),
+      chanRow("Cooking channels", ["cooking"]),
+      row("Vlogs", { live: true, link: "#cat/vlogs" }, latest(["vlogs"], 20, 3)),
+      chanRow("Vloggers", ["vlogs"]),
+      row("Show shorts", {}, latest(SHOW_CATS, 16, 2, { shorts: true })),
+      updatedNote()
     ];
   }
   function viewShorts() {
@@ -644,7 +665,7 @@
   }
 
   /* ---------- router ---------- */
-  const ROUTES = { home: viewHome, dramas: viewDramas, kids: () => viewKids(false), movies: viewMovies, shorts: viewShorts, world: viewWorld, mylist: viewList };
+  const ROUTES = { home: viewHome, dramas: viewDramas, shows: viewShowsTab, kids: () => viewKids(false), movies: viewMovies, shorts: viewShorts, world: viewWorld, mylist: viewList };
   const KID_ROUTES = ["home", "kids", "shorts", "mylist", "ch", "show", "cat", "v"];
   const TAB_OF = { cat: "dramas", show: "dramas", ch: "home", v: "home" };
   let currentTab = "home";
@@ -661,7 +682,7 @@
     document.title = "AD Movie";
     const nodes = tab === "ch" ? viewChannel(arg) : tab === "show" ? viewShow(arg) : tab === "cat" ? viewCategory(arg) : ROUTES[tab]();
     view.replaceChildren(...nodes.filter(Boolean));
-    const active = TAB_OF[tab] || tab;
+    const active = tab === "cat" && SHOW_CATS.includes(arg) ? "shows" : tab === "show" && SHOW_CATS.includes(SHOW.get(arg)?.cat) ? "shows" : (TAB_OF[tab] || tab);
     document.querySelectorAll("[data-tab]").forEach(a => {
       a.classList.toggle("active", a.dataset.tab === active);
       a.hidden = kids && !KID_ROUTES.includes(a.dataset.tab);

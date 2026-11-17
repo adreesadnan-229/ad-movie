@@ -110,7 +110,7 @@ for (const [ch, name, cat] of CHANNELS) {
       const last = items.reduce((m, x) => x[2] > m ? x[2] : m, "");
       let title = cleanTitle(p.snippet.title, name);
       if (/^starring/i.test(title) || title.length > 70) title = cleanTitle(items[0][1].split(/(?:episode|ep\.?)\s*\d/i)[0], name);
-      if (["kids", "toons"].includes(cat) && !title.toLowerCase().includes(name.toLowerCase().split(" ")[0])) title = `${name}: ${title.replace(/^\(new\)\s*-?\s*/i, "")}`;
+      if (["kids", "toons", "shows", "cooking", "vlogs"].includes(cat) && !title.toLowerCase().includes(name.toLowerCase().split(" ")[0])) title = `${name}: ${title.replace(/^\(new\)\s*-?\s*/i, "")}`;
       if (title.length > 70) title = title.slice(0, 67).trim() + "...";
       const dup = index.find(x => x.cat === cat && x.t.toLowerCase() === title.toLowerCase());
       if (dup) { if (dup.n >= items.length) continue; index.splice(index.indexOf(dup), 1); dropped.add(dup.id); }
