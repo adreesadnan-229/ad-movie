@@ -275,3 +275,21 @@ main:focus { outline: none; }
 .seg { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
 .seg button { border: 0; background: none; padding: 7px 13px; border-radius: 999px; color: var(--muted); font-weight: 700; font-size: 13px; }
 .seg button.on { background: #fff; color: #0b0c12; }
+
+/* ---------- support popup ---------- */
+.support { z-index: 80; align-items: center; }
+.support-card { position: relative; text-align: center; max-height: calc(100vh - 24px); overflow-y: auto; }
+.support-x { position: absolute; right: 10px; top: 10px; }
+.support-heart { font-size: 40px; line-height: 1; margin: 4px 0 6px; }
+.support-text { color: #cfd3e0; font-size: 15px; margin: 8px 0 14px; }
+.support-amounts { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 16px; }
+.support-amounts span { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.05); font-weight: 700; font-size: 13px; }
+.support-amounts span:first-child { border-color: #10b981; color: #34d399; }
+.support-pay { display: flex; gap: 16px; align-items: center; justify-content: center; text-align: left; background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.35); border-radius: 18px; padding: 14px; }
+.support-pay img { width: 150px; height: 150px; border-radius: 12px; background: #fff; flex-shrink: 0; }
+.support-pay div { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.support-pay small { color: var(--muted); font-size: 12px; }
+.support-num { font: 800 22px var(--display); letter-spacing: .02em; color: #34d399; }
+.support .sheet-actions { justify-content: center; flex-wrap: wrap; }
+.support-open { margin-top: 12px; }
+@media (max-width: 420px) { .support-pay { flex-direction: column; text-align: center; } .support-pay div { align-items: center; } }

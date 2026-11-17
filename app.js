@@ -703,7 +703,7 @@
       P.ext.hidden = false; P.chan.hidden = !c.id; P.share.hidden = false;
       P.desc.textContent = it.d || "";
       P.note.textContent = "If the video says “Watch on YouTube”, the channel allows it only on YouTube. Tap “YouTube”.";
-      markWatched(it); addRecent(it);
+      markWatched(it); addRecent(it); maybeAskSupport();
       if (show) {
         P.show.hidden = false;
         queue = eps || await episodesOf(it.s);
@@ -826,7 +826,7 @@
   P.next.addEventListener("click", () => step(1));
   $("#playerClose").addEventListener("click", () => closePlayer());
   window.addEventListener("popstate", () => { if (!P.root.hidden) closePlayer(true); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closePlayer(); closeSettings(); } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!SUP.hidden) { closeSupport(); return; } closePlayer(); closeSettings(); } });
 
   /* ---------- search bar ---------- */
   const bar = $("#searchBar"), input = $("#searchInput");
@@ -869,6 +869,34 @@
     location.hash = "home"; route();
   });
   pinRow.hidden = false;
+
+  /* ---------- voluntary support popup (EasyPaisa) ----------
+     After 7 days of use, every 3rd video shows a friendly reminder (at most once
+     every 30 minutes). It can always be closed and the app keeps working.
+     "Maine support kar diya" stops it for good. */
+  const SUP = $("#support");
+  const TRIAL_DAYS = 7, EVERY_N_PLAYS = 3, GAP_MS = 30 * 60 * 1000;
+  if (!store.get("adm_first", 0)) store.set("adm_first", Date.now());
+  function openSupport() { SUP.hidden = false; }
+  function closeSupport() { SUP.hidden = true; store.set("adm_lastAsk", Date.now()); }
+  function maybeAskSupport() {
+    if (kids || store.get("adm_supported", false)) return;
+    const force = /[?&]support=1/.test(location.search);
+    const plays = store.get("adm_plays", 0) + 1;
+    store.set("adm_plays", plays);
+    const trialOver = Date.now() - store.get("adm_first", Date.now()) > TRIAL_DAYS * 864e5;
+    const rested = Date.now() - store.get("adm_lastAsk", 0) > GAP_MS;
+    if (force || (trialOver && rested && plays % EVERY_N_PLAYS === 0)) setTimeout(openSupport, 2500);
+  }
+  $("#supportClose").addEventListener("click", closeSupport);
+  $("#supportLater").addEventListener("click", closeSupport);
+  SUP.addEventListener("click", (e) => { if (e.target === SUP) closeSupport(); });
+  $("#supportDone").addEventListener("click", () => { store.set("adm_supported", true); SUP.hidden = true; toast("Bohat shukriya! ❤️"); });
+  $("#supportCopy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText("03425085229"); toast("Number copy ho gaya"); }
+    catch (e) { prompt("EasyPaisa number:", "03425085229"); }
+  });
+  $("#supportOpen").addEventListener("click", () => { closeSettings(); openSupport(); });
 
   window.addEventListener("hashchange", () => { if (!location.hash.startsWith("#search/")) bar.hidden = true; route(); });
   window.addEventListener("online", () => { if (!FEED) start(); });

@@ -107,11 +107,36 @@
         <input id="tmdbKey" type="text" placeholder="Paste your free TMDB API key" autocomplete="off" spellcheck="false">
         <small>Adds world movie info, new releases and official trailers. Get a free key at themoviedb.org &rarr; Settings &rarr; API.</small>
       </div>
+      <button class="pill sm ghost support-open" id="supportOpen">❤️ Support AD Movie</button>
       <div class="sheet-actions">
         <button class="pill ghost" id="settingsCancel">Close</button>
         <button class="pill" id="settingsSave">Save</button>
       </div>
       <p class="legal">AD Movie only plays content that is free and legal: the latest uploads of official channels on YouTube. It hosts no videos itself. New videos are added automatically every 2 hours.</p>
+    </div>
+  </div>
+
+  <div class="sheet support" id="support" hidden role="dialog" aria-modal="true" aria-labelledby="supportTitle">
+    <div class="sheet-card support-card">
+      <button class="icon-btn support-x" id="supportClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <div class="support-heart">❤️</div>
+      <h2 id="supportTitle">AD Movie ko support karein</h2>
+      <p class="support-text">Assalam o Alaikum! Yeh app maine khud banayi hai aur aap ke liye bilkul <b>free</b> hai. Agar app pasand aaye to <b>Rs 100</b> ya apni marzi se zyada support kar dein, taake main ise behtar bana sakoon. 🙏</p>
+      <div class="support-amounts"><span>Rs 100</span><span>Rs 250</span><span>Rs 500</span><span>Apni marzi</span></div>
+      <div class="support-pay">
+        <img src="icons/easypaisa-qr.png" alt="EasyPaisa / Raast QR code" width="150" height="150">
+        <div>
+          <small>EasyPaisa / Raast</small>
+          <b class="support-num">0342 5085229</b>
+          <small>Muhammad Adrees</small>
+          <button class="pill sm ghost" id="supportCopy">Number copy karein</button>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="pill ghost" id="supportLater">Baad mein</button>
+        <button class="pill grad" id="supportDone">✓ Maine support kar diya</button>
+      </div>
+      <p class="legal">Support bilkul aap ki marzi hai. App bina support ke bhi chalti rahegi.</p>
     </div>
   </div>
 
