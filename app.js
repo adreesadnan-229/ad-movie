@@ -378,14 +378,46 @@
     ];
   }
 
+  // Search: every word must match somewhere (title, channel, language or category), in any order.
+  const ALIAS = {
+    kdrama: "korean", "k-drama": "korean", cdrama: "chinese", "c-drama": "chinese", pakistani: "pk urdu",
+    cartoon: "cartoon", toon: "cartoon", kids: "kids", bachon: "kids", turkish: "turkish", ertugrul: "turkish",
+    movie: "movie", film: "movie", webseries: "web series", drama: "drama", anime: "anime"
+  };
+  const norm = (s) => (s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+  function chanText(c) { return norm(`${c.name} ${c.lang} ${CATS[c.cat]} ${c.cat}`); }
+  function matchScore(words, title, extra) {
+    let score = 0;
+    for (const w of words) {
+      const alts = [w, ...(ALIAS[w] ? ALIAS[w].split(" ") : [])];
+      if (alts.some(a => title.includes(a))) score += 3;
+      else if (alts.some(a => extra.includes(a))) score += 1;
+      else return 0;
+    }
+    return score;
+  }
   function viewSearch(term) {
     const token = ++renderToken;
-    const t = term.toLowerCase();
-    const chans = FEED.channels.filter(c => allowedCh(c) && (c.name + " " + c.lang + " " + CATS[c.cat]).toLowerCase().includes(t));
-    const vids = ALL.filter(v => allowedCh(CH.get(v.ch)) && v.t.toLowerCase().includes(t)).slice(0, 60);
-    const grid = el("div", { class: "grid" }, vids.map(v => videoCard(v)));
-    view.replaceChildren(el("h1", { class: "page-title", text: `Results for “${term}”` }),
-      chans.length ? row("Channels", {}, chans) : null, grid);
+    const words = norm(term).split(" ").filter(Boolean);
+    if (!words.length) return route();
+    const chans = FEED.channels.filter(c => allowedCh(c) && matchScore(words, norm(c.name), chanText(c)) > 0);
+    const hit = (v) => { const c = CH.get(v.ch); return allowedCh(c) ? matchScore(words, norm(v.t), chanText(c)) : 0; };
+    const rank = (list) => list.map(v => [hit(v), v]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0] || b[1].p.localeCompare(a[1].p)).map(x => x[1]);
+    const vids = rank(ALL).slice(0, 60);
+    const shorts = rank(SHORTS).slice(0, 20);
+    const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(term)}`;
+    view.replaceChildren(...[
+      el("h1", { class: "page-title", text: `Results for “${term}”` }),
+      el("p", { class: "page-sub", text: vids.length || chans.length ? `${vids.length} videos found in the latest uploads.` : "Not in the latest uploads." }),
+      chans.length ? row("Channels", {}, chans) : null,
+      vids.length ? el("div", { class: "grid" }, vids.map(v => videoCard(v))) : null,
+      shorts.length ? row("Shorts", {}, shorts) : null,
+      kids ? null : el("div", { class: "unlock" },
+        el("h3", { text: "Can't find it?" }),
+        el("p", { text: "This app shows the newest episodes from each channel. To search older episodes, search on YouTube." }),
+        el("a", { class: "pill sm grad", href: ytUrl, target: "_blank", rel: "noopener", text: `Search “${term}” on YouTube` }))
+    ].filter(Boolean));
+    if (kids && !vids.length && !chans.length) view.append(el("div", { class: "empty" }, el("b", { text: "Nothing found" }), "Try “Peppa”, “Bluey” or “Tom and Jerry”."));
     if (tmdbKey && !kids) {
       tmdb("search/multi", { query: term }).then(d => {
         if (token !== renderToken) return;
@@ -393,7 +425,6 @@
         if (l.length) view.append(row("Movies and series (trailers)", {}, l));
       }).catch(() => {});
     }
-    if (!vids.length && !chans.length) view.append(el("div", { class: "empty" }, el("b", { text: "Nothing found" }), "Try a drama name, channel or cartoon, like “Peppa” or “Tom and Jerry”."));
   }
 
   const ROUTES = { home: viewHome, dramas: viewDramas, kids: () => viewKids(false), movies: viewMovies, shorts: viewShorts, world: viewWorld, mylist: viewList };
@@ -402,6 +433,7 @@
   function route() {
     if (!FEED) return;
     let [tab, arg] = (location.hash || "#home").slice(1).split("/");
+    if (tab === "search" && arg) { const q = decodeURIComponent(arg); input.value = q; bar.hidden = false; viewSearch(q); onScroll(); return; }
     if (!ROUTES[tab] && tab !== "ch") tab = "home";
     if (kids && !KID_ROUTES.includes(tab)) tab = "kids";
     currentTab = tab;
@@ -506,6 +538,14 @@
     const v = input.value.trim();
     searchTimer = setTimeout(() => { if (!FEED) return; v.length >= 2 ? viewSearch(v) : route(); }, 250);
   });
+  // Mobile keyboards: "Go"/Enter runs the search right away and hides the keyboard.
+  input.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault(); clearTimeout(searchTimer);
+    const v = input.value.trim();
+    if (FEED && v) viewSearch(v);
+    input.blur();
+  });
 
   /* ---------- settings ---------- */
   const S = $("#settings");
@@ -520,7 +560,7 @@
     closeSettings(); toast("Settings saved"); route();
   });
 
-  window.addEventListener("hashchange", () => { bar.hidden = true; route(); });
+  window.addEventListener("hashchange", () => { if (!location.hash.startsWith("#search/")) bar.hidden = true; route(); });
 
   view.replaceChildren(el("div", { class: "rail", style: "padding-top:90px" }, [0, 1, 2].map(() => el("div", { class: "vcard skeleton" }, el("span", { class: "vthumb" })))));
   loadFeed().then(route).catch(() => {
