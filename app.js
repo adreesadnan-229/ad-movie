@@ -871,27 +871,45 @@
   pinRow.hidden = false;
 
   /* ---------- voluntary support popup (EasyPaisa) ----------
-     After 7 days of use, every 3rd video shows a friendly reminder (at most once
-     every 30 minutes). It can always be closed and the app keeps working.
-     "Maine support kar diya" stops it for good. */
+     First 7 days: nothing. After that, every 3rd video shows a friendly reminder
+     (at most once every 30 minutes). It can always be closed; the app never blocks.
+     "Maine support kar diya" hides it for 30 days, then it asks again next month.
+     Family phones (opened once with ?family=<code>) never see it. */
   const SUP = $("#support");
-  const TRIAL_DAYS = 7, EVERY_N_PLAYS = 3, GAP_MS = 30 * 60 * 1000;
+  const TRIAL_DAYS = 7, EVERY_N_PLAYS = 3, GAP_MS = 30 * 60 * 1000, MONTH_MS = 30 * 864e5;
+  const FAMILY_HASH = "77ac2bcf29d774c79f7234cbc2be920ec216b6074a35d285dae570193229a290";
   if (!store.get("adm_first", 0)) store.set("adm_first", Date.now());
-  function openSupport() { SUP.hidden = false; }
+  if (store.get("adm_supported", false) === true) { store.set("adm_supportedAt", Date.now()); store.set("adm_supported", null); }
+  (async function checkFamily() {
+    const m = location.search.match(/[?&]family=([^&#]+)/);
+    if (!m || !crypto.subtle) return;
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(decodeURIComponent(m[1])));
+    const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+    history.replaceState(history.state, "", location.pathname + location.hash);
+    if (hex === FAMILY_HASH) { store.set("adm_family", true); toast("Family phone ✓ Support popup band"); }
+    else toast("Family code ghalat hai");
+  })();
+  function openSupport() {
+    const again = store.get("adm_supportedAt", 0);
+    $("#supportTitle").textContent = again ? "Is mahine bhi support karein ❤️" : "AD Movie ko support karein";
+    SUP.hidden = false;
+  }
   function closeSupport() { SUP.hidden = true; store.set("adm_lastAsk", Date.now()); }
   function maybeAskSupport() {
-    if (kids || store.get("adm_supported", false)) return;
+    if (kids || store.get("adm_family", false)) return;
     const force = /[?&]support=1/.test(location.search);
     const plays = store.get("adm_plays", 0) + 1;
     store.set("adm_plays", plays);
-    const trialOver = Date.now() - store.get("adm_first", Date.now()) > TRIAL_DAYS * 864e5;
-    const rested = Date.now() - store.get("adm_lastAsk", 0) > GAP_MS;
-    if (force || (trialOver && rested && plays % EVERY_N_PLAYS === 0)) setTimeout(openSupport, 2500);
+    const now = Date.now();
+    const trialOver = now - store.get("adm_first", now) > TRIAL_DAYS * 864e5;
+    const paidRecently = now - store.get("adm_supportedAt", 0) < MONTH_MS;
+    const rested = now - store.get("adm_lastAsk", 0) > GAP_MS;
+    if (force || (trialOver && !paidRecently && rested && plays % EVERY_N_PLAYS === 0)) setTimeout(openSupport, 2500);
   }
   $("#supportClose").addEventListener("click", closeSupport);
   $("#supportLater").addEventListener("click", closeSupport);
   SUP.addEventListener("click", (e) => { if (e.target === SUP) closeSupport(); });
-  $("#supportDone").addEventListener("click", () => { store.set("adm_supported", true); SUP.hidden = true; toast("Bohat shukriya! ❤️"); });
+  $("#supportDone").addEventListener("click", () => { store.set("adm_supportedAt", Date.now()); SUP.hidden = true; toast("Bohat shukriya! ❤️ Agle mahine phir yaad dilayenge"); });
   $("#supportCopy").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText("03425085229"); toast("Number copy ho gaya"); }
     catch (e) { prompt("EasyPaisa number:", "03425085229"); }
